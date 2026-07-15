@@ -1,0 +1,6 @@
+{
+  "name": "Latvia Weather",
+  "content_in_root": false,
+  "country": ["LV"],
+  "homeassistant": "2024.1.0"
+}

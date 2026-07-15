@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Izvēlieties vietu",
+        "description": "Izvēlieties Latvijas laika prognozes punktu no LVĢMC.",
+        "data": {
+          "punkts": "Vieta"
+        }
+      },
+      "reconfigure": {
+        "title": "Mainīt vietu",
+        "description": "Izvēlieties citu Latvijas laika prognozes punktu.",
+        "data": {
+          "punkts": "Vieta"
+        }
+      }
+    },
+    "error": {
+      "invalid_location": "Izvēlētā vieta nav derīga."
+    },
+    "abort": {
+      "already_configured": "Šī vieta jau ir konfigurēta.",
+      "cannot_connect": "Neizdevās izveidot savienojumu ar LVĢMC laika prognožu API."
+    }
+  }
+}

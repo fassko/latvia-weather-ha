@@ -1,0 +1,12 @@
+{
+  "domain": "latvia_weather",
+  "name": "Latvia Weather",
+  "codeowners": ["@fassko"],
+  "config_flow": true,
+  "documentation": "https://github.com/fassko/latvia-weather-ha",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/fassko/latvia-weather-ha/issues",
+  "requirements": [],
+  "version": "0.2.0"
+}

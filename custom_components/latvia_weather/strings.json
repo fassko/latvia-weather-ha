@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Select location",
+        "description": "Choose a Latvian weather location from LVĢMC forecast points.",
+        "data": {
+          "punkts": "Location"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure location",
+        "description": "Choose a different Latvian weather location.",
+        "data": {
+          "punkts": "Location"
+        }
+      }
+    },
+    "error": {
+      "invalid_location": "Invalid location selected."
+    },
+    "abort": {
+      "already_configured": "This location is already configured.",
+      "cannot_connect": "Could not connect to the LVĢMC weather API."
+    }
+  }
+}
