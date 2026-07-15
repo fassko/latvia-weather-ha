@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "rollup -c",
+    "deploy-card": "node ../../scripts/deploy-card.mjs",
+    "build:all": "npm run build && npm run deploy-card",
     "test": "node --import tsx --test tests/*.test.mts"
   },
   "dependencies": {

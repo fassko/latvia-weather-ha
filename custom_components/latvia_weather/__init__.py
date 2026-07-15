@@ -19,6 +19,23 @@ PLATFORMS: list[Platform] = [Platform.WEATHER, Platform.SENSOR, Platform.BINARY_
 type LatviaWeatherConfigEntry = ConfigEntry[LatviaWeatherCoordinator]
 
 
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Latvia Weather integration."""
+    from homeassistant.core import CoreState
+
+    from .frontend import JSModuleRegistration
+
+    async def _setup_frontend(_event=None) -> None:
+        await JSModuleRegistration(hass).async_register()
+
+    if hass.state == CoreState.running:
+        await _setup_frontend()
+    else:
+        hass.bus.async_listen_once("homeassistant_started", _setup_frontend)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: LatviaWeatherConfigEntry) -> bool:
     """Set up Latvia Weather from a config entry."""
     api = LatviaWeatherApi.from_hass(hass)

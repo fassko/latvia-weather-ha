@@ -1,5 +1,5 @@
 import { css, html, LitElement, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import {
   getForecastsForPeriod,
   getTodayRainPoint,
@@ -63,7 +63,6 @@ function getInitialChartPreferences(defaultPeriod: ForecastPeriod): ChartPrefere
   };
 }
 
-@customElement("latvia-weather-chart-card")
 export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
   @property({ attribute: false }) public hass?: HomeAssistant;
 
@@ -391,13 +390,21 @@ declare global {
   }
 }
 
-window.customCards = window.customCards ?? [];
-window.customCards.push({
-  type: "latvia-weather-chart-card",
-  name: "Latvia Weather Chart",
-  description: "Temperature, precipitation, and wind forecast chart for Latvia Weather",
-  preview: false,
-});
+const CARD_ELEMENT = "latvia-weather-chart-card";
+
+if (!customElements.get(CARD_ELEMENT)) {
+  customElements.define(CARD_ELEMENT, LatviaWeatherChartCard);
+}
+
+if (!window.customCards?.some((card) => card.type === CARD_ELEMENT)) {
+  window.customCards = window.customCards ?? [];
+  window.customCards.push({
+    type: CARD_ELEMENT,
+    name: "Latvia Weather Chart",
+    description: "Temperature, precipitation, and wind forecast chart for Latvia Weather",
+    preview: false,
+  });
+}
 
 console.info(
   "%c LATVIA-WEATHER-CHART-CARD %c v0.3.0 ",
