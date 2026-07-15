@@ -40,6 +40,7 @@ _ICON_TO_CONDITION: dict[str, str] = {
     "102": CONDITION_PARTLYCLOUDY,
     "103": CONDITION_CLOUDY,
     "104": CONDITION_CLOUDY,
+    "105": CONDITION_PARTLYCLOUDY,
     "201": CONDITION_FOG,
     "202": CONDITION_FOG,
     "203": CONDITION_FOG,
@@ -70,7 +71,7 @@ _NIGHT_ICON_TO_CONDITION: dict[str, str] = {
 def map_icon_to_condition(icon_code: str) -> str:
     """Map an LVĢMC icon code to a Home Assistant weather condition."""
     if not icon_code or len(icon_code) < 2:
-        return CONDITION_EXCEPTIONAL
+        return CONDITION_PARTLYCLOUDY
 
     is_night = icon_code.startswith("2")
     code = icon_code[1:]
@@ -78,4 +79,16 @@ def map_icon_to_condition(icon_code: str) -> str:
     if is_night and code in _NIGHT_ICON_TO_CONDITION:
         return _NIGHT_ICON_TO_CONDITION[code]
 
-    return _ICON_TO_CONDITION.get(code, CONDITION_EXCEPTIONAL)
+    if code in _ICON_TO_CONDITION:
+        return _ICON_TO_CONDITION[code]
+
+    if code.startswith(("30", "50")):
+        return CONDITION_RAINY
+    if code.startswith("40"):
+        return CONDITION_SNOWY
+    if code.startswith("20"):
+        return CONDITION_FOG
+    if code.startswith("10"):
+        return CONDITION_CLOUDY if is_night else CONDITION_PARTLYCLOUDY
+
+    return CONDITION_CLOUDY if is_night else CONDITION_PARTLYCLOUDY
