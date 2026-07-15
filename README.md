@@ -13,7 +13,7 @@ Related web app: [latvia-weather.vercel.app](https://latvia-weather.vercel.app)
 - Thunder alert binary sensor for the next 24 hours
 - 24-hour weather insights on the weather entity (warmest hour, rain/snow periods, windiest hour)
 - Stale data fallback when the LVĢMC API is temporarily unavailable (up to 6 hours)
-- All LVĢMC forecast locations across Latvia (loaded from the API)
+- 40 curated forecast locations across Latvia (same list as [latvia-weather.vercel.app](https://latvia-weather.vercel.app), including Garupe)
 - No API key required
 - Data refreshed every 15 minutes
 

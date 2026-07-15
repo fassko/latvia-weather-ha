@@ -11,6 +11,7 @@ import aiohttp
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import STALE_FALLBACK, WEATHER_API_BASE
+from .locations import LOCATION_POINT_IDS
 from .parser import (
     WeatherData,
     WeatherLocationPoint,
@@ -123,9 +124,13 @@ class LatviaWeatherApi:
         self,
         moment: datetime | None = None,
     ) -> list[WeatherLocationPoint]:
-        """Fetch all available location points from the LVĢMC API."""
+        """Fetch curated location points from the LVĢMC API."""
         laiks = format_laiks(moment)
-        url = f"{WEATHER_API_BASE}/weather_points_forecast?laiks={laiks}"
+        punkti = ",".join(LOCATION_POINT_IDS)
+        url = (
+            f"{WEATHER_API_BASE}/weather_points_forecast"
+            f"?laiks={laiks}&punkti={punkti}"
+        )
         async with self._session.get(url) as response:
             if response.status != 200:
                 msg = f"Location points API returned {response.status}"
