@@ -1,12 +1,12 @@
-import ApexCharts, { type ApexOptions } from "apexcharts";
+import type { ApexOptions } from "apexcharts";
+import type ApexCharts from "apexcharts";
+import { getApexCharts } from "../apexcharts-instance";
 import type { ForecastPeriod } from "../types";
 import {
   type ChartPoint,
-  getConditionIconIndexes,
   getDaySegments,
   getDayTickLabels,
   getHourTicksForPeriod,
-  getWindDirectionIconStep,
 } from "./chart-data";
 import { getConditionEmoji, getConditionLabel } from "./condition-icons";
 import { METRIC_COLORS, type ChartTheme } from "./theme";
@@ -29,63 +29,6 @@ const SERIES_LABELS = {
   precipitation: "Precipitation",
   windSpeed: "Wind",
 } as const;
-
-function buildAnnotations(
-  data: ChartPoint[],
-  period: ForecastPeriod,
-  theme: ChartTheme,
-  hiddenSeries: Set<ChartSeriesKey>,
-): ApexOptions["annotations"] {
-  const points: NonNullable<ApexOptions["annotations"]>["points"] = [];
-
-  if (!hiddenSeries.has("temperature")) {
-    const iconIndexes = getConditionIconIndexes(data, period);
-    for (const index of iconIndexes) {
-      const point = data[index];
-      if (!point?.iconCode) continue;
-      points.push({
-        x: point.xIndex,
-        y: point.temperature,
-        marker: { size: 0 },
-        label: {
-          text: getConditionEmoji(point.iconCode),
-          borderWidth: 0,
-          style: {
-            fontSize: period === 1 ? "16px" : period === 3 ? "14px" : "12px",
-            background: "transparent",
-            color: theme.text,
-          },
-          offsetY: -18,
-        },
-      });
-    }
-  }
-
-  if (!hiddenSeries.has("windSpeed")) {
-    const step = getWindDirectionIconStep(period);
-    data.forEach((point, index) => {
-      if (index % step !== 0) return;
-      points.push({
-        x: point.xIndex,
-        y: point.windSpeed,
-        marker: { size: 0 },
-        label: {
-          text: "↑",
-          borderWidth: 0,
-          style: {
-            fontSize: period === 1 ? "18px" : period === 3 ? "16px" : "14px",
-            fontWeight: "800",
-            color: METRIC_COLORS.wind,
-            background: "transparent",
-          },
-          offsetY: 16,
-        },
-      });
-    });
-  }
-
-  return { points };
-}
 
 function buildTooltip(
   data: ChartPoint[],
@@ -258,7 +201,6 @@ export function buildChartOptions({
         },
       },
     ],
-    annotations: buildAnnotations(data, period, theme, hiddenSeries),
     tooltip: buildTooltip(data, theme),
     series: [
       {
@@ -313,7 +255,9 @@ export class ChartRenderer {
 
     container.replaceChildren();
     this.container = container;
-    this.chart = new ApexCharts(container, apexOptions);
+
+    const ApexChartsCtor = await getApexCharts();
+    this.chart = new ApexChartsCtor(container, apexOptions);
     await this.chart.render();
   }
 

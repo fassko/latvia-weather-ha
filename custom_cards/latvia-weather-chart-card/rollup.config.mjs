@@ -8,6 +8,7 @@ export default {
     file: "dist/latvia-weather-chart-card.js",
     format: "es",
     sourcemap: true,
+    inlineDynamicImports: true,
   },
   plugins: [resolve({ browser: true }), commonjs(), typescript({ tsconfig: "./tsconfig.json" })],
 };

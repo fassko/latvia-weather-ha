@@ -178,6 +178,20 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
     }
   }
 
+  private async waitForContainerWidth(
+    container: HTMLElement,
+    maxAttempts = 20,
+  ): Promise<boolean> {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (container.clientWidth > 0) return true;
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+    }
+
+    return container.clientWidth > 0;
+  }
+
   private async scheduleRenderChart(): Promise<void> {
     const generation = ++this.renderGeneration;
     await this.updateComplete;
@@ -185,6 +199,8 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
 
     const container = this.renderRoot.querySelector<HTMLElement>("#chart-container");
     if (!container || this.forecasts.length === 0) return;
+
+    if (!(await this.waitForContainerWidth(container))) return;
 
     const periodForecasts = getForecastsForPeriod(this.forecasts, this.period);
     const data = toChartPoints(periodForecasts);
@@ -418,7 +434,7 @@ if (!window.customCards?.some((card) => card.type === CARD_ELEMENT)) {
 }
 
 console.info(
-  "%c LATVIA-WEATHER-CHART-CARD %c v0.3.0 ",
+  "%c LATVIA-WEATHER-CHART-CARD %c v0.3.9 ",
   "color: white; background: #0ea5e9; font-weight: bold;",
   "color: #0ea5e9; background: white; font-weight: bold;",
 );
