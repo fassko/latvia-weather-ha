@@ -736,22 +736,40 @@ function buildChartOptions({ data, period, theme, hiddenSeries, onLegendToggle, 
     };
 }
 class ChartRenderer {
-    constructor(container) {
-        this.container = container;
+    constructor() {
         this.chart = null;
+        this.container = null;
     }
-    render(options) {
+    async render(options) {
         const apexOptions = buildChartOptions(options);
+        const { container } = options;
+        if (this.chart && this.container !== container) {
+            await this.destroy();
+        }
         if (this.chart) {
-            void this.chart.destroy();
+            try {
+                await this.chart.updateOptions(apexOptions, true, true);
+                return;
+            }
+            catch {
+                await this.destroy();
+            }
+        }
+        this.container = container;
+        this.chart = new us(container, apexOptions);
+        await this.chart.render();
+    }
+    async destroy() {
+        if (this.chart) {
+            try {
+                await this.chart.destroy();
+            }
+            catch {
+                // Ignore teardown errors when Lit has already replaced the container.
+            }
             this.chart = null;
         }
-        this.chart = new us(this.container, apexOptions);
-        void this.chart.render();
-    }
-    destroy() {
-        void this.chart?.destroy();
-        this.chart = null;
+        this.container = null;
     }
 }
 
@@ -832,6 +850,7 @@ class LatviaWeatherChartCard extends i$1 {
         this.chartRenderer = null;
         this.refreshTimer = null;
         this.unsubscribeEntity = null;
+        this.renderGeneration = 0;
     }
     static getStubConfig(hass) {
         const weatherEntity = Object.keys(hass.states).find((entityId) => entityId.startsWith("weather."));
@@ -873,7 +892,7 @@ class LatviaWeatherChartCard extends i$1 {
         }
         this.unsubscribeEntity?.();
         this.unsubscribeEntity = null;
-        this.chartRenderer?.destroy();
+        void this.chartRenderer?.destroy();
         this.chartRenderer = null;
     }
     updated(changed) {
@@ -884,7 +903,7 @@ class LatviaWeatherChartCard extends i$1 {
             changed.has("period") ||
             changed.has("hiddenSeries") ||
             changed.has("hass")) {
-            this.renderChart();
+            void this.scheduleRenderChart();
         }
     }
     get isDark() {
@@ -913,7 +932,11 @@ class LatviaWeatherChartCard extends i$1 {
             this.loading = false;
         }
     }
-    renderChart() {
+    async scheduleRenderChart() {
+        const generation = ++this.renderGeneration;
+        await this.updateComplete;
+        if (generation !== this.renderGeneration)
+            return;
         const container = this.renderRoot.querySelector("#chart-container");
         if (!container || this.forecasts.length === 0)
             return;
@@ -922,16 +945,22 @@ class LatviaWeatherChartCard extends i$1 {
         if (data.length === 0)
             return;
         if (!this.chartRenderer) {
-            this.chartRenderer = new ChartRenderer(container);
+            this.chartRenderer = new ChartRenderer();
         }
-        this.chartRenderer.render({
-            container,
-            data,
-            period: this.period,
-            theme: this.theme,
-            hiddenSeries: this.hiddenSeries,
-            onLegendToggle: (series) => this.toggleSeries(series),
-        });
+        try {
+            await this.chartRenderer.render({
+                container,
+                data,
+                period: this.period,
+                theme: this.theme,
+                hiddenSeries: this.hiddenSeries,
+                onLegendToggle: (series) => this.toggleSeries(series),
+            });
+        }
+        catch (err) {
+            console.error("Latvia Weather chart render failed", err);
+            this.error = err instanceof Error ? err.message : "Failed to render chart";
+        }
     }
     setPeriod(period) {
         this.period = period;

@@ -304,23 +304,39 @@ export function buildChartOptions({
 
 export class ChartRenderer {
   private chart: ApexCharts | null = null;
+  private container: HTMLElement | null = null;
 
-  constructor(private readonly container: HTMLElement) {}
-
-  render(options: RenderChartOptions): void {
+  async render(options: RenderChartOptions): Promise<void> {
     const apexOptions = buildChartOptions(options);
+    const { container } = options;
 
-    if (this.chart) {
-      void this.chart.destroy();
-      this.chart = null;
+    if (this.chart && this.container !== container) {
+      await this.destroy();
     }
 
-    this.chart = new ApexCharts(this.container, apexOptions);
-    void this.chart.render();
+    if (this.chart) {
+      try {
+        await this.chart.updateOptions(apexOptions, true, true);
+        return;
+      } catch {
+        await this.destroy();
+      }
+    }
+
+    this.container = container;
+    this.chart = new ApexCharts(container, apexOptions);
+    await this.chart.render();
   }
 
-  destroy(): void {
-    void this.chart?.destroy();
-    this.chart = null;
+  async destroy(): Promise<void> {
+    if (this.chart) {
+      try {
+        await this.chart.destroy();
+      } catch {
+        // Ignore teardown errors when Lit has already replaced the container.
+      }
+      this.chart = null;
+    }
+    this.container = null;
   }
 }

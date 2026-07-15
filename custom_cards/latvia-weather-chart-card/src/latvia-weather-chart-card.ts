@@ -76,6 +76,7 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
   private chartRenderer: ChartRenderer | null = null;
   private refreshTimer: number | null = null;
   private unsubscribeEntity: (() => void) | null = null;
+  private renderGeneration = 0;
 
   static getStubConfig(hass: HomeAssistant): LatviaWeatherChartCardConfig {
     const weatherEntity = Object.keys(hass.states).find((entityId) =>
@@ -126,7 +127,7 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
     }
     this.unsubscribeEntity?.();
     this.unsubscribeEntity = null;
-    this.chartRenderer?.destroy();
+    void this.chartRenderer?.destroy();
     this.chartRenderer = null;
   }
 
@@ -141,7 +142,7 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
       changed.has("hiddenSeries") ||
       changed.has("hass")
     ) {
-      this.renderChart();
+      void this.scheduleRenderChart();
     }
   }
 
@@ -177,7 +178,11 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
     }
   }
 
-  private renderChart(): void {
+  private async scheduleRenderChart(): Promise<void> {
+    const generation = ++this.renderGeneration;
+    await this.updateComplete;
+    if (generation !== this.renderGeneration) return;
+
     const container = this.renderRoot.querySelector<HTMLElement>("#chart-container");
     if (!container || this.forecasts.length === 0) return;
 
@@ -186,17 +191,22 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
     if (data.length === 0) return;
 
     if (!this.chartRenderer) {
-      this.chartRenderer = new ChartRenderer(container);
+      this.chartRenderer = new ChartRenderer();
     }
 
-    this.chartRenderer.render({
-      container,
-      data,
-      period: this.period,
-      theme: this.theme,
-      hiddenSeries: this.hiddenSeries,
-      onLegendToggle: (series) => this.toggleSeries(series),
-    });
+    try {
+      await this.chartRenderer.render({
+        container,
+        data,
+        period: this.period,
+        theme: this.theme,
+        hiddenSeries: this.hiddenSeries,
+        onLegendToggle: (series) => this.toggleSeries(series),
+      });
+    } catch (err) {
+      console.error("Latvia Weather chart render failed", err);
+      this.error = err instanceof Error ? err.message : "Failed to render chart";
+    }
   }
 
   private setPeriod(period: ForecastPeriod): void {
