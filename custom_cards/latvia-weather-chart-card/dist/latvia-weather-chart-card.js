@@ -738,6 +738,9 @@ class LatviaWeatherChartCard extends i {
         this.refreshTimer = null;
         this.unsubscribeEntity = null;
         this.renderGeneration = 0;
+        this.loadInFlight = null;
+        this.lastFetchAt = 0;
+        this.lastDarkMode = null;
     }
     static getStubConfig(hass) {
         const weatherEntity = Object.keys(hass.states).find((entityId) => entityId.startsWith("weather."));
@@ -750,6 +753,7 @@ class LatviaWeatherChartCard extends i {
         if (!config.entity) {
             throw new Error("Entity must be specified");
         }
+        const entityChanged = this.config?.entity !== config.entity;
         const defaultPeriod = isForecastPeriod(config.default_period)
             ? config.default_period
             : 1;
@@ -760,6 +764,10 @@ class LatviaWeatherChartCard extends i {
         };
         this.period = prefs.period;
         this.hiddenSeries = new Set(prefs.hiddenSeries);
+        if (entityChanged) {
+            this.lastFetchAt = 0;
+            void this.loadForecasts(true);
+        }
     }
     getCardSize() {
         return this.period > 1 ? 5 : 4;
@@ -784,12 +792,18 @@ class LatviaWeatherChartCard extends i {
     }
     updated(changed) {
         if (changed.has("hass") && this.hass) {
-            void this.loadForecasts();
+            const isDark = this.hass.themes.darkMode ?? false;
+            if (this.lastDarkMode === null) {
+                this.lastDarkMode = isDark;
+            }
+            else if (isDark !== this.lastDarkMode) {
+                this.lastDarkMode = isDark;
+                void this.scheduleRenderChart();
+            }
         }
         if (changed.has("forecasts") ||
             changed.has("period") ||
-            changed.has("hiddenSeries") ||
-            changed.has("hass")) {
+            changed.has("hiddenSeries")) {
             void this.scheduleRenderChart();
         }
     }
@@ -805,19 +819,31 @@ class LatviaWeatherChartCard extends i {
             hiddenSeries: Array.from(this.hiddenSeries),
         }));
     }
-    async loadForecasts() {
+    async loadForecasts(force = false) {
         if (!this.hass || !this.config?.entity)
             return;
-        try {
-            this.error = null;
-            const forecasts = await fetchHourlyForecasts(this.hass, this.config.entity);
-            this.forecasts = forecasts;
-            this.loading = false;
-        }
-        catch (err) {
-            this.error = err instanceof Error ? err.message : "Failed to load forecast";
-            this.loading = false;
-        }
+        const now = Date.now();
+        if (!force && now - this.lastFetchAt < FORECAST_REFRESH_MS)
+            return;
+        if (this.loadInFlight)
+            return this.loadInFlight;
+        this.loadInFlight = (async () => {
+            try {
+                this.error = null;
+                const forecasts = await fetchHourlyForecasts(this.hass, this.config.entity);
+                this.forecasts = forecasts;
+                this.lastFetchAt = Date.now();
+                this.loading = false;
+            }
+            catch (err) {
+                this.error = err instanceof Error ? err.message : "Failed to load forecast";
+                this.loading = false;
+            }
+            finally {
+                this.loadInFlight = null;
+            }
+        })();
+        return this.loadInFlight;
     }
     async waitForContainerWidth(container, maxAttempts = 20) {
         for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -1063,7 +1089,7 @@ if (!window.customCards?.some((card) => card.type === CARD_ELEMENT)) {
         preview: false,
     });
 }
-console.info("%c LATVIA-WEATHER-CHART-CARD %c v0.3.9 ", "color: white; background: #0ea5e9; font-weight: bold;", "color: #0ea5e9; background: white; font-weight: bold;");
+console.info("%c LATVIA-WEATHER-CHART-CARD %c v0.3.10 ", "color: white; background: #0ea5e9; font-weight: bold;", "color: #0ea5e9; background: white; font-weight: bold;");
 
 var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;

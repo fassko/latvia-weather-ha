@@ -77,6 +77,9 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
   private refreshTimer: number | null = null;
   private unsubscribeEntity: (() => void) | null = null;
   private renderGeneration = 0;
+  private loadInFlight: Promise<void> | null = null;
+  private lastFetchAt = 0;
+  private lastDarkMode: boolean | null = null;
 
   static getStubConfig(hass: HomeAssistant): LatviaWeatherChartCardConfig {
     const weatherEntity = Object.keys(hass.states).find((entityId) =>
@@ -94,6 +97,7 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
       throw new Error("Entity must be specified");
     }
 
+    const entityChanged = this.config?.entity !== config.entity;
     const defaultPeriod = isForecastPeriod(config.default_period)
       ? config.default_period
       : 1;
@@ -105,6 +109,11 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
     };
     this.period = prefs.period;
     this.hiddenSeries = new Set(prefs.hiddenSeries);
+
+    if (entityChanged) {
+      this.lastFetchAt = 0;
+      void this.loadForecasts(true);
+    }
   }
 
   public getCardSize(): number {
@@ -133,14 +142,19 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
 
   protected updated(changed: Map<string, unknown>): void {
     if (changed.has("hass") && this.hass) {
-      void this.loadForecasts();
+      const isDark = this.hass.themes.darkMode ?? false;
+      if (this.lastDarkMode === null) {
+        this.lastDarkMode = isDark;
+      } else if (isDark !== this.lastDarkMode) {
+        this.lastDarkMode = isDark;
+        void this.scheduleRenderChart();
+      }
     }
 
     if (
       changed.has("forecasts") ||
       changed.has("period") ||
-      changed.has("hiddenSeries") ||
-      changed.has("hass")
+      changed.has("hiddenSeries")
     ) {
       void this.scheduleRenderChart();
     }
@@ -164,18 +178,29 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
     );
   }
 
-  private async loadForecasts(): Promise<void> {
+  private async loadForecasts(force = false): Promise<void> {
     if (!this.hass || !this.config?.entity) return;
 
-    try {
-      this.error = null;
-      const forecasts = await fetchHourlyForecasts(this.hass, this.config.entity);
-      this.forecasts = forecasts;
-      this.loading = false;
-    } catch (err) {
-      this.error = err instanceof Error ? err.message : "Failed to load forecast";
-      this.loading = false;
-    }
+    const now = Date.now();
+    if (!force && now - this.lastFetchAt < FORECAST_REFRESH_MS) return;
+    if (this.loadInFlight) return this.loadInFlight;
+
+    this.loadInFlight = (async () => {
+      try {
+        this.error = null;
+        const forecasts = await fetchHourlyForecasts(this.hass!, this.config.entity);
+        this.forecasts = forecasts;
+        this.lastFetchAt = Date.now();
+        this.loading = false;
+      } catch (err) {
+        this.error = err instanceof Error ? err.message : "Failed to load forecast";
+        this.loading = false;
+      } finally {
+        this.loadInFlight = null;
+      }
+    })();
+
+    return this.loadInFlight;
   }
 
   private async waitForContainerWidth(
@@ -434,7 +459,7 @@ if (!window.customCards?.some((card) => card.type === CARD_ELEMENT)) {
 }
 
 console.info(
-  "%c LATVIA-WEATHER-CHART-CARD %c v0.3.9 ",
+  "%c LATVIA-WEATHER-CHART-CARD %c v0.3.10 ",
   "color: white; background: #0ea5e9; font-weight: bold;",
   "color: #0ea5e9; background: white; font-weight: bold;",
 );
