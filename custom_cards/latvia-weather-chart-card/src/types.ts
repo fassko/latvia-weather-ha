@@ -28,6 +28,11 @@ export interface HassServiceResponse {
   };
 }
 
+export interface ServiceCallResponse<T = unknown> {
+  context?: Record<string, unknown>;
+  response?: T;
+}
+
 export interface HassForecastEntry {
   datetime: string;
   condition?: string;
@@ -50,8 +55,11 @@ export interface HomeAssistant {
   callService(
     domain: string,
     service: string,
-    data?: Record<string, unknown>,
-  ): Promise<unknown>;
+    serviceData?: Record<string, unknown>,
+    target?: Record<string, unknown>,
+    notifyOnError?: boolean,
+    returnResponse?: boolean,
+  ): Promise<ServiceCallResponse>;
 }
 
 export interface LovelaceCard {

@@ -30,11 +30,16 @@ export async function fetchHourlyForecasts(
   hass: HomeAssistant,
   entityId: string,
 ): Promise<HourlyForecast[]> {
-  const response = (await hass.callService("weather", "get_forecasts", {
-    entity_id: entityId,
-    type: "hourly",
-  })) as HassServiceResponse | undefined;
+  const result = await hass.callService(
+    "weather",
+    "get_forecasts",
+    { type: "hourly" },
+    { entity_id: entityId },
+    true,
+    true,
+  );
 
+  const response = result.response as HassServiceResponse | undefined;
   if (!response) return [];
 
   const entityForecast = response[entityId]?.forecast;

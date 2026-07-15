@@ -775,10 +775,8 @@ function normalizeForecastEntry(entry) {
     };
 }
 async function fetchHourlyForecasts(hass, entityId) {
-    const response = (await hass.callService("weather", "get_forecasts", {
-        entity_id: entityId,
-        type: "hourly",
-    }));
+    const result = await hass.callService("weather", "get_forecasts", { type: "hourly" }, { entity_id: entityId }, true, true);
+    const response = result.response;
     if (!response)
         return [];
     const entityForecast = response[entityId]?.forecast;
