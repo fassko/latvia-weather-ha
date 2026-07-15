@@ -421,7 +421,6 @@ const METRIC_COLORS = {
     precipitation: "#38bdf8",
     wind: "#10b981",
 };
-const WEEKEND_TICK_COLOR = "#dc2626";
 const CHART_COLORS = {
     light: {
         grid: "#e2e8f0",
@@ -716,11 +715,7 @@ function buildChartOptions({ data, period, theme, hiddenSeries, onLegendToggle, 
                     text: daySegments
                         .map((segment) => {
                         const tick = dayTickLabels.get(segment.midIndex);
-                        if (!tick)
-                            return "";
-                        return tick.isWeekendDay
-                            ? `<span style="color:${WEEKEND_TICK_COLOR}">${tick.label}</span>`
-                            : tick.label;
+                        return tick?.label ?? "";
                     })
                         .filter(Boolean)
                         .join("   "),
@@ -743,18 +738,10 @@ class ChartRenderer {
     async render(options) {
         const apexOptions = buildChartOptions(options);
         const { container } = options;
-        if (this.chart && this.container !== container) {
+        if (this.chart) {
             await this.destroy();
         }
-        if (this.chart) {
-            try {
-                await this.chart.updateOptions(apexOptions, true, true);
-                return;
-            }
-            catch {
-                await this.destroy();
-            }
-        }
+        container.replaceChildren();
         this.container = container;
         this.chart = new us(container, apexOptions);
         await this.chart.render();
@@ -956,6 +943,7 @@ class LatviaWeatherChartCard extends i$1 {
                 hiddenSeries: this.hiddenSeries,
                 onLegendToggle: (series) => this.toggleSeries(series),
             });
+            this.error = null;
         }
         catch (err) {
             console.error("Latvia Weather chart render failed", err);

@@ -9,7 +9,7 @@ import {
   getWindDirectionIconStep,
 } from "./chart-data";
 import { getConditionEmoji, getConditionLabel } from "./condition-icons";
-import { METRIC_COLORS, type ChartTheme, WEEKEND_TICK_COLOR } from "./theme";
+import { METRIC_COLORS, type ChartTheme } from "./theme";
 import { formatLatviaTime } from "./timezone";
 import { formatWindSpeed, getWindDirection } from "./wind";
 
@@ -283,10 +283,7 @@ export function buildChartOptions({
             text: daySegments
               .map((segment) => {
                 const tick = dayTickLabels.get(segment.midIndex);
-                if (!tick) return "";
-                return tick.isWeekendDay
-                  ? `<span style="color:${WEEKEND_TICK_COLOR}">${tick.label}</span>`
-                  : tick.label;
+                return tick?.label ?? "";
               })
               .filter(Boolean)
               .join("   "),
@@ -310,19 +307,11 @@ export class ChartRenderer {
     const apexOptions = buildChartOptions(options);
     const { container } = options;
 
-    if (this.chart && this.container !== container) {
+    if (this.chart) {
       await this.destroy();
     }
 
-    if (this.chart) {
-      try {
-        await this.chart.updateOptions(apexOptions, true, true);
-        return;
-      } catch {
-        await this.destroy();
-      }
-    }
-
+    container.replaceChildren();
     this.container = container;
     this.chart = new ApexCharts(container, apexOptions);
     await this.chart.render();

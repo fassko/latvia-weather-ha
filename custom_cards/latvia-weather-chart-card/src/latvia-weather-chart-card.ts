@@ -203,6 +203,7 @@ export class LatviaWeatherChartCard extends LitElement implements LovelaceCard {
         hiddenSeries: this.hiddenSeries,
         onLegendToggle: (series) => this.toggleSeries(series),
       });
+      this.error = null;
     } catch (err) {
       console.error("Latvia Weather chart render failed", err);
       this.error = err instanceof Error ? err.message : "Failed to render chart";
