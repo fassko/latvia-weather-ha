@@ -39,6 +39,19 @@ def _install_homeassistant_stubs() -> None:
     weather.Forecast = _Forecast
     weather.WeatherEntity = _GenericStub("WeatherEntity", (), {})()
     weather.WeatherEntityFeature = ModuleType("WeatherEntityFeature")
+    weather.ATTR_CONDITION_SUNNY = "sunny"
+    weather.ATTR_CONDITION_CLEAR_NIGHT = "clear-night"
+    weather.ATTR_CONDITION_PARTLYCLOUDY = "partlycloudy"
+    weather.ATTR_CONDITION_CLOUDY = "cloudy"
+    weather.ATTR_CONDITION_FOG = "fog"
+    weather.ATTR_CONDITION_RAINY = "rainy"
+    weather.ATTR_CONDITION_POURING = "pouring"
+    weather.ATTR_CONDITION_LIGHTNING = "lightning"
+    weather.ATTR_CONDITION_LIGHTNING_RAINY = "lightning-rainy"
+    weather.ATTR_CONDITION_HAIL = "hail"
+    weather.ATTR_CONDITION_SNOWY = "snowy"
+    weather.ATTR_CONDITION_SNOWY_RAINY = "snowy-rainy"
+    weather.ATTR_CONDITION_EXCEPTIONAL = "exceptional"
 
     sensor.SensorEntity = _GenericStub("SensorEntity", (), {})()
     sensor.SensorDeviceClass = ModuleType("SensorDeviceClass")
