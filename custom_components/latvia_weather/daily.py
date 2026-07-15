@@ -171,6 +171,7 @@ def build_hourly_forecasts(
         Forecast(
             datetime=forecast.time.astimezone().isoformat(),
             condition=map_icon_to_condition(forecast.icon_code),
+            icon_code=forecast.icon_code,
             native_temperature=forecast.temperature,
             native_apparent_temperature=forecast.feels_like,
             native_precipitation=forecast.precipitation,
