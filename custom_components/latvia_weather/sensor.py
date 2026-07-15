@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfLength
+from homeassistant.const import PERCENTAGE, UV_INDEX, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -96,7 +96,7 @@ class LatviaWeatherUvIndexSensor(LatviaWeatherSensor):
     """Current UV index sensor."""
 
     _attr_name = "UV index"
-    _attr_device_class = SensorDeviceClass.UV_INDEX
+    _attr_native_unit_of_measurement = UV_INDEX
 
     @property
     def unique_id(self) -> str:

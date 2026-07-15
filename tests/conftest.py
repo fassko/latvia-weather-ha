@@ -69,6 +69,7 @@ def _install_homeassistant_stubs() -> None:
     const.UnitOfTemperature = ModuleType("UnitOfTemperature")
     const.UnitOfTemperature.CELSIUS = "°C"
     const.PERCENTAGE = "%"
+    const.UV_INDEX = "UV index"
     const.Platform = ModuleType("Platform")
     const.Platform.WEATHER = "weather"
     const.Platform.SENSOR = "sensor"
