@@ -27,10 +27,6 @@ Related web app: [latvia-weather.vercel.app](https://latvia-weather.vercel.app)
 4. Go to **Settings** → **Devices & Services** → **Add Integration**
 5. Search for **Latvia Weather** and select a location
 
-The forecast chart card is bundled with the integration and is registered automatically — no manual resource setup is needed.
-
-To install only the chart card (without the integration), add the same repository in HACS with category **Dashboard** instead.
-
 ### Manual install
 
 1. Copy the `custom_components/latvia_weather/` folder into your Home Assistant `config/custom_components/` directory
@@ -71,65 +67,6 @@ trigger:
     attribute: is_stale
     to: "true"
 ```
-
-## Dashboard chart card
-
-A custom Lovelace card is included for the multi-series forecast chart (temperature, precipitation, and wind) with 24h / 3 days / 7 days toggles, matching the [latvia-weather web app](https://latvia-weather.vercel.app) chart.
-
-When you install the integration via HACS or manually, the card JavaScript is bundled and registered automatically as a Lovelace resource. After restart, add the card directly to a dashboard.
-
-If you use YAML-mode Lovelace, add this resource manually:
-
-```yaml
-resources:
-  - url: /latvia_weather/latvia-weather-chart-card.js
-    type: module
-```
-
-### Manual card-only install
-
-Use this only if you want the card without the integration:
-
-1. Copy [`dist/latvia-weather-chart-card.js`](dist/latvia-weather-chart-card.js) into your Home Assistant `config/www/` directory
-2. Add a Lovelace resource (**Settings** → **Dashboards** → **Resources**):
-
-```yaml
-resources:
-  - url: /local/latvia-weather-chart-card.js
-    type: module
-```
-
-Or install via **HACS** → **Dashboards** using this repository with category **Dashboard**.
-
-### Add the card to a dashboard
-
-```yaml
-type: custom:latvia-weather-chart-card
-entity: weather.riga
-default_period: 7
-show_rain_insight: true
-```
-
-### Card options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | required | Your Latvia Weather `weather.*` entity |
-| `default_period` | `1`, `3`, or `7` | `1` | Initial period: 24h, 3 days, or 7 days |
-| `show_rain_insight` | boolean | `true` | Show rain hint below title in 24h mode |
-
-The card calls `weather.get_forecasts` (hourly) and refreshes every 15 minutes. Period and legend visibility preferences are saved in browser `localStorage`.
-
-### Build the card from source
-
-```bash
-cd custom_cards/latvia-weather-chart-card
-npm install
-npm run build:all
-npm test
-```
-
-`build:all` compiles the card and copies the bundle into `custom_components/latvia_weather/frontend/` and `dist/` for HACS.
 
 ## Data attribution
 

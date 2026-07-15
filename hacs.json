@@ -1,7 +1,6 @@
 {
   "name": "Latvia Weather",
   "content_in_root": false,
-  "filename": "latvia-weather-chart-card.js",
   "country": ["LV"],
   "homeassistant": "2024.1.0"
 }
